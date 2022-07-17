@@ -11,28 +11,8 @@ import datetime
 from celery import Celery
 
 
-start_time = time.time()
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
-
-
-def cache_expiration():
-        if database_exists(app.config["SQLALCHEMY_DATABASE_URI"]):
-            try:
-                seconds = time.time() - start_time * i
-                if seconds > app.config['DB_EXPERATION_TIME']:
-                    Link.query.delete()
-                    User.query.delete()
-                    db.session.commit()
-                    i+=1
-            except:
-                i=1
-                seconds = time.time() - start_time
-                if seconds > app.config['DB_EXPERATION_TIME']:
-                    Link.query.delete()
-                    User.query.delete()
-                    db.session.commit()
-                    i+=1
 
 
 @celery.task
@@ -76,7 +56,6 @@ def gists_for_user():
 
 @app.route('/api/v1/search', methods=['GET', 'POST'])
 def search():
-    cache_expiration()
     form = SearchForm()
     approved = []
     if form.validate_on_submit():
@@ -140,7 +119,6 @@ def search():
 
 @app.route('/api/v1/search/results', methods=['GET', 'POST'])
 def results():
-    cache_expiration()
     transfered_data = session.get('form_data_transfer')
     flash(transfered_data)
     page = request.args.get('page', 1, type=int)
